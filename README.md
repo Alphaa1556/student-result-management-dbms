@@ -65,5 +65,5 @@ student-result-management/
 ## 👤 Author
 
 **[Yash Khanavkar]**  
-Mahatma Gandhi Mission's College Of Engineering   
+Mahatma Gandhi Mission's College Of Engineering And Technology   
 GitHub:(https://github.com/Alphaa1556/)
