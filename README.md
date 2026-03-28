@@ -49,6 +49,7 @@ student-result-management/
 │
 ├── student_result_management.sql   ← Main SQL file (run this)
 ├── index.html      ← Live web demo (open in browser)
+├── app.py <- Backend 
 └── README.md
 ```
 
