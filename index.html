@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Result Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+  --border: #30363d; --accent: #3fb950; --accent2: #58a6ff;
+  --text: #e6edf3; --muted: #8b949e; --danger: #f85149;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; }
+.sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); }
+.sidebar-logo h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--accent); line-height: 1.3; }
+.sidebar-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.nav { flex: 1; padding: 10px 8px; }
+.nav-section { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 12px 8px 6px; }
+.nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; background: none; border: none; color: var(--muted); border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; text-align: left; transition: all 0.15s; }
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: rgba(63,185,80,0.1); color: var(--accent); }
+.nav-btn .icon { font-size: 15px; width: 18px; text-align: center; }
+.status-bar { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+.status-dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; }
+.main { margin-left: 220px; flex: 1; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+.topbar h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; }
+.topbar-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.content { padding: 24px 28px; }
+.page { display: none; }
+.page.active { display: block; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--card-color, var(--accent)); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin: 4px 0 2px; }
+.stat-sub { font-size: 11px; color: var(--muted); }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.table-head { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.table-head h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 14px; text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+td { padding: 11px 14px; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.grade { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
+.grade-O  { background: rgba(63,185,80,0.15);  color: #3fb950; }
+.grade-Ap { background: rgba(88,166,255,0.15); color: #58a6ff; }
+.grade-A  { background: rgba(88,166,255,0.12); color: #79b8ff; }
+.grade-Bp { background: rgba(227,179,65,0.15); color: #e3b341; }
+.grade-B  { background: rgba(227,179,65,0.12); color: #d9a53c; }
+.grade-C  { background: rgba(248,161,73,0.15); color: #f8a149; }
+.grade-D  { background: rgba(248,161,73,0.12); color: #d4862a; }
+.grade-F  { background: rgba(248,81,73,0.15);  color: #f85149; }
+.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.form-section h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; transition: border-color 0.15s; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent2); }
+.form-group select option { background: var(--surface2); }
+.btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.btn-primary { background: var(--accent); color: #0d1117; }
+.btn-primary:hover { background: #2ea043; }
+.btn-danger { background: rgba(248,81,73,0.15); color: var(--danger); border: 1px solid rgba(248,81,73,0.3); font-size: 11px; padding: 3px 8px; }
+.btn-danger:hover { background: rgba(248,81,73,0.25); }
+.form-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 13px; z-index: 100; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: rgba(63,185,80,0.4); color: var(--accent); }
+.toast.error { border-color: rgba(248,81,73,0.4); color: var(--danger); }
+.search-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; width: 220px; }
+.search-box:focus { outline: none; border-color: var(--accent2); }
+.empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+.empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+.connecting { text-align: center; padding: 60px; color: var(--muted); }
+.connecting .spin { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-banner { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); border-radius: 8px; padding: 14px 18px; color: var(--danger); margin-bottom: 20px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Student Result<br>Management</h1>
+      <p>Flask + MySQL Backend</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <button class="nav-btn active" onclick="show('dashboard')" id="nav-dashboard"><span class="icon">📊</span> Dashboard</button>
+      <div class="nav-section">Manage</div>
+      <button class="nav-btn" onclick="show('students')" id="nav-students"><span class="icon">👤</span> Students</button>
+      <button class="nav-btn" onclick="show('courses')" id="nav-courses"><span class="icon">📚</span> Courses</button>
+      <button class="nav-btn" onclick="show('exams')" id="nav-exams"><span class="icon">📝</span> Exams</button>
+      <button class="nav-btn" onclick="show('results')" id="nav-results"><span class="icon">🏆</span> Results</button>
+      <div class="nav-section">Reports</div>
+      <button class="nav-btn" onclick="show('report')" id="nav-report"><span class="icon">📄</span> Report Card</button>
+      <button class="nav-btn" onclick="show('analysis')" id="nav-analysis"><span class="icon">📈</span> Analysis</button>
+    </nav>
+    <div class="status-bar" id="status-bar"><span class="status-dot"></span>Connected to MySQL</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="page-title">Dashboard</h2>
+        <div class="topbar-sub" id="page-sub">Overview of all academic records</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- CONNECTION ERROR BANNER -->
+      <div class="error-banner" id="conn-error" style="display:none">
+        ⚠️ Cannot connect to Flask server. Make sure <code>app.py</code> is running — open terminal and run: <strong>python app.py</strong>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid"><div class="connecting"><div class="spin"></div><br>Loading…</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="table-wrap"><div class="table-head"><h3>🏅 Top 5 Students</h3></div><div id="top-students"></div></div>
+          <div class="table-wrap"><div class="table-head"><h3>⚠️ Failed Students</h3></div><div id="failed-students"></div></div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="page" id="page-students">
+        <div class="form-section">
+          <h3>➕ Add New Student</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Full Name</label><input id="s-name" placeholder="Aarav Patel"></div>
+            <div class="form-group"><label>Date of Birth</label><input type="date" id="s-dob"></div>
+            <div class="form-group"><label>Gender</label><select id="s-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+            <div class="form-group"><label>Email</label><input id="s-email" placeholder="student@mail.com"></div>
+            <div class="form-group"><label>Phone</label><input id="s-phone" placeholder="98XXXXXXXX"></div>
+            <div class="form-group"><label>Department</label><select id="s-dept"></select></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addStudent()">Add Student</button></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><h3>All Students</h3><input class="search-box" placeholder="Search…" oninput="filterTable('students-table', this.value)"></div>
+          <div style="overflow-x:auto"><table id="students-table"></table></div>
+        </div>
+      </div>
+
+      <!-- COURSES -->
+      <div class="page" id="page-courses">
+        <div class="form-section">
+          <h3>➕ Add New Course</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Course Name</label><input id="c-name" placeholder="Data Structures"></div>
+            <div class="form-group"><label>Credits</label><input type="number" id="c-credits" value="4" min="1" max="6"></div>
+            <div class="form-group"><label>Department</label><select id="c-dept"></select></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addCourse()">Add Course</button></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><h3>All Courses</h3></div>
+          <div style="overflow-x:auto"><table id="courses-table"></table></div>
+        </div>
+      </div>
+
+      <!-- EXAMS -->
+      <div class="page" id="page-exams">
+        <div class="form-section">
+          <h3>➕ Add New Exam</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Exam Name</label><input id="e-name" placeholder="Mid-Term Sem 3"></div>
+            <div class="form-group"><label>Exam Date</label><input type="date" id="e-date"></div>
+            <div class="form-group"><label>Semester</label><select id="e-sem">
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3" selected>Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select></div>
+            <div class="form-group"><label>Academic Year</label><input id="e-year" placeholder="2024-25"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addExam()">Add Exam</button></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><h3>All Exams</h3></div>
+          <div style="overflow-x:auto"><table id="exams-table"></table></div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="page" id="page-results">
+        <div class="form-section">
+          <h3>➕ Add / Update Result</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Student</label><select id="r-student"></select></div>
+            <div class="form-group"><label>Course</label><select id="r-course"></select></div>
+            <div class="form-group"><label>Exam</label><select id="r-exam"></select></div>
+            <div class="form-group"><label>Marks Obtained</label><input type="number" id="r-marks" placeholder="75" min="0" max="100"></div>
+            <div class="form-group"><label>Max Marks</label><input type="number" id="r-max" value="100"></div>
+            <div class="form-group"><label>Grade (auto)</label><input id="r-grade" readonly style="opacity:0.5"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addResult()">Save Result</button><span style="font-size:12px;color:var(--muted)">Grade auto-calculated from marks</span></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><h3>All Results</h3><input class="search-box" placeholder="Search…" oninput="filterTable('results-table', this.value)"></div>
+          <div style="overflow-x:auto"><table id="results-table"></table></div>
+        </div>
+      </div>
+
+      <!-- REPORT CARD -->
+      <div class="page" id="page-report">
+        <div class="form-section">
+          <h3>🔍 Generate Report Card</h3>
+          <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+            <div class="form-group"><label>Select Student</label><select id="rc-student"></select></div>
+            <div class="form-group"><label>Exam (optional)</label><select id="rc-exam"><option value="">All Exams</option></select></div>
+            <button class="btn btn-primary" style="margin-bottom:1px" onclick="generateReport()">Generate</button>
+          </div>
+        </div>
+        <div id="report-output"></div>
+      </div>
+
+      <!-- ANALYSIS -->
+      <div class="page" id="page-analysis">
+        <div id="analysis-output"><div class="connecting"><div class="spin"></div><br>Loading…</div></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+
+// ─── UTILS ──────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+function gradeBadge(g) {
+  const cls = {O:'grade-O','A+':'grade-Ap',A:'grade-A','B+':'grade-Bp',B:'grade-B',C:'grade-C',D:'grade-D',F:'grade-F'};
+  return `<span class="grade ${cls[g]||''}">${g||'-'}</span>`;
+}
+
+function filterTable(id, q) {
+  [...document.getElementById(id).querySelectorAll('tbody tr')]
+    .forEach(tr => tr.style.display = tr.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none');
+}
+
+function calcGrade(marks, max) {
+  const p = (marks/max)*100;
+  if(p>=90)return'O'; if(p>=80)return'A+'; if(p>=70)return'A';
+  if(p>=60)return'B+'; if(p>=55)return'B'; if(p>=45)return'C';
+  if(p>=35)return'D'; return'F';
+}
+
+async function api(path, opts={}) {
+  try {
+    const res = await fetch(API + path, {
+      headers: {'Content-Type':'application/json'},
+      ...opts
+    });
+    const data = await res.json();
+    document.getElementById('conn-error').style.display = 'none';
+    return data;
+  } catch(e) {
+    document.getElementById('conn-error').style.display = 'block';
+    return null;
+  }
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────
+const pageTitles = {
+  dashboard: ['Dashboard','Overview of all academic records'],
+  students:  ['Students','Manage student records'],
+  courses:   ['Courses','Manage course records'],
+  exams:     ['Exams','Manage exam schedules'],
+  results:   ['Results','Enter and view marks'],
+  report:    ['Report Card','Student-wise result report'],
+  analysis:  ['Analysis','Department & subject analytics'],
+};
+
+function show(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  const [title, sub] = pageTitles[page];
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-sub').textContent = sub;
+  const loaders = {
+    dashboard: renderDashboard,
+    students:  () => { loadDepts(); renderStudents(); },
+    courses:   () => { loadDepts(); renderCourses(); },
+    exams:     renderExams,
+    results:   () => { loadStudentsSelect(); loadCoursesSelect(); loadExamsSelect(); renderResults(); },
+    report:    () => { loadStudentsSelect(); loadExamsSelect(); },
+    analysis:  renderAnalysis,
+  };
+  if (loaders[page]) loaders[page]();
+}
+
+// ─── SELECTS ────────────────────────────────────────────────
+async function loadDepts() {
+  const depts = await api('/departments');
+  if (!depts) return;
+  const opts = depts.map(d=>`<option value="${d.dept_id}">${d.dept_name}</option>`).join('');
+  ['s-dept','c-dept'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+}
+
+async function loadStudentsSelect() {
+  const students = await api('/students');
+  if (!students) return;
+  const opts = students.map(s=>`<option value="${s.student_id}">${s.name}</option>`).join('');
+  ['r-student','rc-student'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+}
+
+async function loadCoursesSelect() {
+  const courses = await api('/courses');
+  if (!courses) return;
+  const el = document.getElementById('r-course');
+  if (el) el.innerHTML = courses.map(c=>`<option value="${c.course_id}">${c.course_name}</option>`).join('');
+}
+
+async function loadExamsSelect() {
+  const exams = await api('/exams');
+  if (!exams) return;
+  const opts = exams.map(e=>`<option value="${e.exam_id}">${e.exam_name}</option>`).join('');
+  const re = document.getElementById('r-exam');
+  if (re) re.innerHTML = opts;
+  const rce = document.getElementById('rc-exam');
+  if (rce) rce.innerHTML = '<option value="">All Exams</option>' + opts;
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────
+async function renderDashboard() {
+  const data = await api('/stats');
+  if (!data) return;
+  const c = data.counts;
+  const cards = [
+    {label:'Total Students', val:c.students, sub:'Enrolled',  color:'#3fb950'},
+    {label:'Total Courses',  val:c.courses,  sub:'Available', color:'#58a6ff'},
+    {label:'Exams Held',     val:c.exams,    sub:'Conducted', color:'#e3b341'},
+    {label:'Pass Rate',      val:(data.pass_rate||0)+'%', sub:'Overall', color:'#f78166'},
+  ];
+  document.getElementById('stats-grid').innerHTML = cards.map(c=>`
+    <div class="stat-card" style="--card-color:${c.color}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-val" style="color:${c.color}">${c.val}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+
+  let th = '<table><thead><tr><th>#</th><th>Student</th><th>Avg Marks</th></tr></thead><tbody>';
+  data.top_students.forEach((r,i) => {
+    th += `<tr><td>${i+1}</td><td>${r.name}</td><td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;background:var(--surface2);border-radius:3px;height:6px;overflow:hidden">
+          <div style="width:${r.avg_marks}%;background:var(--accent);height:100%;border-radius:3px"></div>
+        </div>
+        <span style="min-width:32px;text-align:right;font-size:12px">${r.avg_marks}</span>
+      </div></td></tr>`;
+  });
+  document.getElementById('top-students').innerHTML = th + '</tbody></table>';
+
+  if (data.failed_students.length) {
+    let fh = '<table><thead><tr><th>Student</th><th>Course</th><th>Marks</th></tr></thead><tbody>';
+    data.failed_students.forEach(r => {
+      fh += `<tr><td>${r.name}</td><td>${r.course_name}</td><td style="color:var(--danger)">${r.marks_obtained}</td></tr>`;
+    });
+    document.getElementById('failed-students').innerHTML = fh + '</tbody></table>';
+  } else {
+    document.getElementById('failed-students').innerHTML = '<div class="empty-state"><div class="icon">✅</div>No failures!</div>';
+  }
+}
+
+// ─── STUDENTS ────────────────────────────────────────────────
+async function renderStudents() {
+  const rows = await api('/students');
+  if (!rows) return;
+  const table = document.getElementById('students-table');
+  if (!rows.length) { table.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div>No students yet</div></td></tr>'; return; }
+  table.innerHTML = `<thead><tr><th>ID</th><th>Name</th><th>Gender</th><th>Email</th><th>Phone</th><th>Department</th><th>Action</th></tr></thead><tbody>`
+    + rows.map(r=>`<tr>
+        <td>${r.student_id}</td><td>${r.name}</td><td>${r.gender||'-'}</td>
+        <td>${r.email||'-'}</td><td>${r.phone||'-'}</td><td>${r.dept_name||'-'}</td>
+        <td><button class="btn btn-danger" onclick="deleteStudent(${r.student_id})">Delete</button></td>
+      </tr>`).join('') + '</tbody>';
+}
+
+async function addStudent() {
+  const name = document.getElementById('s-name').value.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+  const res = await api('/students', {
+    method: 'POST',
+    body: JSON.stringify({
+      name, dob: document.getElementById('s-dob').value,
+      gender: document.getElementById('s-gender').value,
+      email: document.getElementById('s-email').value,
+      phone: document.getElementById('s-phone').value,
+      dept_id: document.getElementById('s-dept').value
+    })
+  });
+  if (res?.success) {
+    toast('Student added to MySQL! ✅');
+    document.getElementById('s-name').value = '';
+    document.getElementById('s-email').value = '';
+    document.getElementById('s-phone').value = '';
+    renderStudents();
+  } else {
+    toast(res?.error || 'Error adding student', 'error');
+  }
+}
+
+async function deleteStudent(id) {
+  if (!confirm('Delete this student?')) return;
+  await api(`/students/${id}`, { method: 'DELETE' });
+  toast('Student deleted'); renderStudents();
+}
+
+// ─── COURSES ─────────────────────────────────────────────────
+async function renderCourses() {
+  const rows = await api('/courses');
+  if (!rows) return;
+  const table = document.getElementById('courses-table');
+  table.innerHTML = `<thead><tr><th>ID</th><th>Course Name</th><th>Credits</th><th>Department</th><th>Action</th></tr></thead><tbody>`
+    + rows.map(r=>`<tr>
+        <td>${r.course_id}</td><td>${r.course_name}</td>
+        <td>${r.credits}</td><td>${r.dept_name||'-'}</td>
+        <td><button class="btn btn-danger" onclick="deleteCourse(${r.course_id})">Delete</button></td>
+      </tr>`).join('') + '</tbody>';
+}
+
+async function addCourse() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { toast('Course name required', 'error'); return; }
+  const res = await api('/courses', {
+    method: 'POST',
+    body: JSON.stringify({ course_name: name, credits: document.getElementById('c-credits').value, dept_id: document.getElementById('c-dept').value })
+  });
+  if (res?.success) { toast('Course added to MySQL! ✅'); document.getElementById('c-name').value=''; renderCourses(); }
+  else toast(res?.error||'Error', 'error');
+}
+
+async function deleteCourse(id) {
+  if (!confirm('Delete this course?')) return;
+  await api(`/courses/${id}`, { method: 'DELETE' });
+  toast('Course deleted'); renderCourses();
+}
+
+// ─── EXAMS ───────────────────────────────────────────────────
+async function renderExams() {
+  const rows = await api('/exams');
+  if (!rows) return;
+  const table = document.getElementById('exams-table');
+  table.innerHTML = `<thead><tr><th>ID</th><th>Exam Name</th><th>Date</th><th>Semester</th><th>Year</th><th>Action</th></tr></thead><tbody>`
+    + rows.map(r=>`<tr>
+        <td>${r.exam_id}</td><td>${r.exam_name}</td>
+        <td>${r.exam_date||'-'}</td><td>${r.semester}</td><td>${r.academic_year||'-'}</td>
+        <td><button class="btn btn-danger" onclick="deleteExam(${r.exam_id})">Delete</button></td>
+      </tr>`).join('') + '</tbody>';
+}
+
+async function addExam() {
+  const name = document.getElementById('e-name').value.trim();
+  if (!name) { toast('Exam name required', 'error'); return; }
+  const res = await api('/exams', {
+    method: 'POST',
+    body: JSON.stringify({ exam_name: name, exam_date: document.getElementById('e-date').value, semester: document.getElementById('e-sem').value, academic_year: document.getElementById('e-year').value })
+  });
+  if (res?.success) { toast('Exam added to MySQL! ✅'); document.getElementById('e-name').value=''; renderExams(); }
+  else toast(res?.error||'Error', 'error');
+}
+
+async function deleteExam(id) {
+  if (!confirm('Delete this exam?')) return;
+  await api(`/exams/${id}`, { method: 'DELETE' });
+  toast('Exam deleted'); renderExams();
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────
+async function renderResults() {
+  const rows = await api('/results');
+  if (!rows) return;
+  const table = document.getElementById('results-table');
+  table.innerHTML = `<thead><tr><th>ID</th><th>Student</th><th>Course</th><th>Exam</th><th>Marks</th><th>Max</th><th>Grade</th><th>Action</th></tr></thead><tbody>`
+    + rows.map(r=>`<tr>
+        <td>${r.result_id}</td><td>${r.student}</td><td>${r.course_name}</td>
+        <td>${r.exam_name}</td><td>${parseFloat(r.marks_obtained).toFixed(0)}</td><td>${parseFloat(r.max_marks).toFixed(0)}</td>
+        <td>${gradeBadge(r.grade)}</td>
+        <td><button class="btn btn-danger" onclick="deleteResult(${r.result_id})">Delete</button></td>
+      </tr>`).join('') + '</tbody>';
+}
+
+async function addResult() {
+  const marks = parseFloat(document.getElementById('r-marks').value);
+  const max = parseFloat(document.getElementById('r-max').value)||100;
+  if (isNaN(marks)) { toast('Enter valid marks', 'error'); return; }
+  document.getElementById('r-grade').value = calcGrade(marks, max);
+  const res = await api('/results', {
+    method: 'POST',
+    body: JSON.stringify({
+      student_id: document.getElementById('r-student').value,
+      course_id: document.getElementById('r-course').value,
+      exam_id: document.getElementById('r-exam').value,
+      marks_obtained: marks, max_marks: max
+    })
+  });
+  if (res?.success) {
+    toast(`Result ${res.action} in MySQL! Grade: ${res.grade} ✅`);
+    document.getElementById('r-marks').value='';
+    document.getElementById('r-grade').value='';
+    renderResults();
+  } else toast(res?.error||'Error', 'error');
+}
+
+async function deleteResult(id) {
+  if (!confirm('Delete this result?')) return;
+  await api(`/results/${id}`, { method: 'DELETE' });
+  toast('Result deleted'); renderResults();
+}
+
+// ─── REPORT CARD ─────────────────────────────────────────────
+async function generateReport() {
+  const sid = document.getElementById('rc-student').value;
+  const eid = document.getElementById('rc-exam').value;
+  if (!sid) { toast('Please select a student', 'error'); return; }
+  const rows = await api(`/report/${sid}${eid ? '?exam_id='+eid : ''}`);
+  if (!rows || !rows.length) {
+    document.getElementById('report-output').innerHTML = '<div class="empty-state"><div class="icon">📭</div>No results found for this student</div>';
+    return;
+  }
+  const s = rows[0];
+  // Parse all marks as floats — MySQL sometimes returns strings
+  const total = rows.reduce((a, r) => a + parseFloat(r.marks_obtained || 0), 0);
+  const maxT  = rows.reduce((a, r) => a + parseFloat(r.max_marks || 100), 0);
+  const pct   = maxT > 0 ? ((total / maxT) * 100).toFixed(2) : '0.00';
+  const passed = rows.filter(r => r.grade !== 'F').length;
+
+  let html = `<div class="table-wrap">
+    <div class="table-head" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <h3>📄 Report Card — ${s.name}</h3>
+      <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);flex-wrap:wrap">
+        <span>🏫 Department: <strong style="color:var(--text)">${s.dept_name}</strong></span>
+        <span>📊 Total Marks: <strong style="color:var(--accent)">${total.toFixed(0)} / ${maxT.toFixed(0)}</strong></span>
+        <span>📈 Percentage: <strong style="color:var(--accent2)">${pct}%</strong></span>
+        <span>✅ Passed: <strong style="color:var(--accent)">${passed} / ${rows.length}</strong></span>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Exam</th><th>Semester</th><th>Course</th>
+          <th>Credits</th><th>Marks</th><th>Max Marks</th><th>Percentage</th><th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  rows.forEach((r, i) => {
+    const m   = parseFloat(r.marks_obtained || 0);
+    const mx  = parseFloat(r.max_marks || 100);
+    const rowPct = mx > 0 ? ((m / mx) * 100).toFixed(1) : '0.0';
+    html += `<tr>
+      <td>${i + 1}</td>
+      <td>${r.exam_name}</td>
+      <td>Semester ${r.semester}</td>
+      <td>${r.course_name}</td>
+      <td>${r.credits}</td>
+      <td><strong>${m.toFixed(0)}</strong></td>
+      <td>${mx.toFixed(0)}</td>
+      <td>${rowPct}%</td>
+      <td>${gradeBadge(r.grade)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody>
+      <tfoot>
+        <tr style="background:var(--surface2)">
+          <td colspan="5" style="font-weight:600;padding:12px 14px;font-size:13px">TOTAL</td>
+          <td style="font-weight:700;color:var(--accent);font-size:14px">${total.toFixed(0)}</td>
+          <td style="font-weight:600">${maxT.toFixed(0)}</td>
+          <td style="font-weight:700;color:var(--accent2)">${pct}%</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>`;
+  document.getElementById('report-output').innerHTML = html;
+}
+
+// ─── ANALYSIS ────────────────────────────────────────────────
+async function renderAnalysis() {
+  const data = await api('/stats');
+  if (!data) return;
+  const maxG = Math.max(...data.grade_dist.map(r=>r.count));
+  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="table-wrap"><div class="table-head"><h3>🏫 Department Stats</h3></div>
+      <table><thead><tr><th>Department</th><th>Students</th><th>Avg</th><th>Failures</th></tr></thead><tbody>`;
+  data.dept_stats.forEach(r => {
+    html += `<tr><td>${r.dept_name}</td><td>${r.students}</td>
+      <td style="color:var(--accent)">${r.avg_marks||'-'}</td>
+      <td style="color:${r.failures>0?'var(--danger)':'var(--accent)'}">${r.failures}</td></tr>`;
+  });
+  html += `</tbody></table></div>
+    <div class="table-wrap"><div class="table-head"><h3>📊 Grade Distribution</h3></div>
+      <table><thead><tr><th>Grade</th><th>Count</th><th>Bar</th></tr></thead><tbody>`;
+  data.grade_dist.forEach(r => {
+    const w = Math.round((r.count/maxG)*100);
+    html += `<tr><td>${gradeBadge(r.grade)}</td><td>${r.count}</td>
+      <td><div style="background:var(--surface2);border-radius:3px;height:8px;width:120px;overflow:hidden">
+        <div style="width:${w}%;background:var(--accent2);height:100%;border-radius:3px"></div></div></td></tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  document.getElementById('analysis-output').innerHTML = html;
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+document.getElementById('r-marks').addEventListener('input', function() {
+  const m = parseFloat(this.value), mx = parseFloat(document.getElementById('r-max').value)||100;
+  if (!isNaN(m)) document.getElementById('r-grade').value = calcGrade(m, mx);
+});
+
+// Load initial data
+loadDepts();
+renderDashboard();
+</script>
+</body>
+</html>
