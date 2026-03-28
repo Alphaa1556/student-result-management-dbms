@@ -48,7 +48,7 @@ A relational database application to manage student academic records — includi
 student-result-management/
 │
 ├── student_result_management.sql   ← Main SQL file (run this)
-├── student_result_system.html      ← Live web demo (open in browser)
+├── index.html      ← Live web demo (open in browser)
 └── README.md
 ```
 
